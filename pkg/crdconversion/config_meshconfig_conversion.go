@@ -73,7 +73,6 @@ func convertMeshConfig(obj *unstructured.Unstructured, toVersion string) (*unstr
 		switch toVersion {
 		case configv1alpha2.SchemeGroupVersion.String():
 			log.Debug().Msgf("Converting MeshConfig v1alpha3 -> v1alpha2")
-			// Remove spec.sidecar.localProxyMode field not supported in v1alpha2
 			unsupportedFields := [][]string{
 				{"spec", "sidecar", "localProxyMode"},
 			}

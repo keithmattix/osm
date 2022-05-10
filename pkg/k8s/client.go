@@ -345,7 +345,7 @@ func (c client) UpdateStatus(resource interface{}) (metav1.Object, error) {
 
 // ServiceToMeshServices translates a k8s service with one or more ports to one or more
 // MeshService objects per port.
-func ServiceToMeshServices(c Controller, svc corev1.Service) []service.MeshService {
+func ServiceToMeshServices(svc corev1.Service, endpointsGetter func(service.MeshService) (*corev1.Endpoints, error)) []service.MeshService {
 	var meshServices []service.MeshService
 
 	for _, portSpec := range svc.Spec.Ports {
@@ -358,7 +358,7 @@ func ServiceToMeshServices(c Controller, svc corev1.Service) []service.MeshServi
 
 		// The endpoints for the kubernetes service carry information that allows
 		// us to retrieve the TargetPort for the MeshService.
-		endpoints, _ := c.GetEndpoints(meshSvc)
+		endpoints, _ := endpointsGetter(meshSvc)
 		if endpoints != nil {
 			meshSvc.TargetPort = GetTargetPortFromEndpoints(portSpec.Name, *endpoints)
 		} else {

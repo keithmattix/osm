@@ -239,3 +239,7 @@ const (
 	// multicluster field value for context field.
 	LogContextMulticluster = "multicluster"
 )
+
+var (
+	SupportedProtocols = []string{ProtocolHTTP, ProtocolHTTPS, ProtocolTCP, ProtocolGRPC, ProtocolTCPServerFirst}
+)

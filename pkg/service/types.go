@@ -56,18 +56,6 @@ func (ms MeshService) NamespacedKey() string {
 	return fmt.Sprintf("%s/%s", ms.Namespace, ms.ProviderKey())
 }
 
-// Init initializes the unexported variables within ms
-// this is helpful for comparison purposes
-func (ms *MeshService) Init() {
-	if !ms.subdomainPopulated {
-		ms.Subdomain()
-	}
-
-	if ms.providerKey == "" {
-		ms.ProviderKey()
-	}
-}
-
 // Subdomain is an optional subdomain for this MeshService
 // TODO: possibly memoize if performance suffers
 func (ms *MeshService) Subdomain() string {

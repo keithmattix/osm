@@ -1,5 +1,40 @@
 # Release Notes
 
+## Release v1.1.2
+
+## Notable changes
+
+- Remove crd conversion webhook (fixes upgrade path)
+
+## Breaking changes
+
+None
+
+## Deprecation notes
+
+None
+
+## Release v1.1.1
+
+## Notable changes
+
+- A new `spec.sidecar.localProxyMode` field in the MeshConfig API allows users
+  to specify whether traffic from Envoy sidecars to application containers is
+  redirected via `127.0.0.1` (the previous behavior and current default) or the
+  Pod's IP address
+- A new `spec.traffic.networkInterfaceExclusionList` field in the MeshConfig API
+  allows users to specify names of network interfaces on Pods that should not
+  have traffic proxied through Envoy sidecars
+- The installed MeshConfig resource can now be updated with `kubectl apply`
+
+## Breaking changes
+
+None
+
+## Deprecation notes
+
+None
+
 ## Release v1.1.0
 
 ### Notable changes

@@ -339,6 +339,12 @@ spec:
                     configResyncInterval:
                       description: Resync interval for regular proxy broadcast updates
                       type: string
+                    httpIdleTimeout:
+                      description: Idle timeout for HTTP connections (in seconds). A value of zero (0) defers to the Envoy defaults for idle timeout
+                      type: integer
+                    tcpIdleTimeout:
+                      description: Idle timeout for TCP connections (in seconds). A value of zero (0) defers to the Envoy defaults for idle timeout
+                      type: integer
                 traffic:
                   description: Configuration for traffic management
                   type: object

@@ -7,6 +7,7 @@ import (
 	xds_local_ratelimit "github.com/envoyproxy/go-control-plane/envoy/extensions/filters/http/local_ratelimit/v3"
 	xds_hcm "github.com/envoyproxy/go-control-plane/envoy/extensions/filters/network/http_connection_manager/v3"
 	"github.com/golang/protobuf/ptypes/any"
+	"github.com/golang/protobuf/ptypes/duration"
 	"github.com/golang/protobuf/ptypes/wrappers"
 
 	"github.com/openservicemesh/osm/pkg/auth"
@@ -45,10 +46,16 @@ type httpConnManagerOptions struct {
 	// Tracing options
 	enableTracing      bool
 	tracingAPIEndpoint string
+
+	// connection settings
+	idleTimeout int64
 }
 
 func (options httpConnManagerOptions) build() (*xds_hcm.HttpConnectionManager, error) {
 	connManager := &xds_hcm.HttpConnectionManager{
+		StreamIdleTimeout: &duration.Duration{ // explicitly disable stream idle timeout
+			Seconds: 0,
+		},
 		StatPrefix: fmt.Sprintf("%s.%s", meshHTTPConnManagerStatPrefix, options.rdsRoutConfigName),
 		CodecType:  xds_hcm.HttpConnectionManager_AUTO,
 		HttpFilters: []*xds_hcm.HttpFilter{
@@ -90,6 +97,12 @@ func (options httpConnManagerOptions) build() (*xds_hcm.HttpConnectionManager, e
 				UpgradeType: websocketUpgradeType,
 			},
 		},
+	}
+
+	if options.idleTimeout != 0 {
+		connManager.CommonHttpProtocolOptions.IdleTimeout = &duration.Duration{
+			Seconds: options.idleTimeout,
+		}
 	}
 
 	// For inbound connections, add the Authz filter

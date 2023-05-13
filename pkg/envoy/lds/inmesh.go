@@ -11,6 +11,7 @@ import (
 	xds_tcp_proxy "github.com/envoyproxy/go-control-plane/envoy/extensions/filters/network/tcp_proxy/v3"
 	xds_type "github.com/envoyproxy/go-control-plane/envoy/type/v3"
 	"github.com/golang/protobuf/ptypes/any"
+	"github.com/golang/protobuf/ptypes/duration"
 
 	"google.golang.org/protobuf/types/known/anypb"
 	"google.golang.org/protobuf/types/known/durationpb"
@@ -90,7 +91,7 @@ func (lb *listenerBuilder) getInboundHTTPFilters(trafficMatch *trafficpolicy.Tra
 	}
 
 	// Build the HTTP Connection Manager filter from its options
-	inboundConnManager, err := httpConnManagerOptions{
+	opts := httpConnManagerOptions{
 		direction:         inbound,
 		rdsRoutConfigName: route.GetInboundMeshRouteConfigNameForPort(trafficMatch.DestinationPort),
 
@@ -102,7 +103,14 @@ func (lb *listenerBuilder) getInboundHTTPFilters(trafficMatch *trafficpolicy.Tra
 		// Tracing options
 		enableTracing:      lb.cfg.IsTracingEnabled(),
 		tracingAPIEndpoint: lb.cfg.GetTracingEndpoint(),
-	}.build()
+
+		// Connection options
+	}
+
+	if lb.cfg.GetSidecar().HTTPIdleTimeout != 0 {
+		opts.idleTimeout = lb.cfg.GetSidecar().HTTPIdleTimeout
+	}
+	inboundConnManager, err := opts.build()
 	if err != nil {
 		return nil, fmt.Errorf("Error building inbound HTTP connection manager for proxy with identity %s and traffic match %s: %w", lb.serviceIdentity, trafficMatch.Name, err)
 	}
@@ -256,6 +264,13 @@ func (lb *listenerBuilder) getInboundTCPFilters(trafficMatch *trafficpolicy.Traf
 		StatPrefix:       fmt.Sprintf("%s.%s", inboundMeshTCPProxyStatPrefix, trafficMatch.Cluster),
 		ClusterSpecifier: &xds_tcp_proxy.TcpProxy_Cluster{Cluster: trafficMatch.Cluster},
 	}
+
+	if lb.cfg.GetSidecar().TCPIdleTimeout != 0 {
+		tcpProxy.IdleTimeout = &duration.Duration{
+			Seconds: lb.cfg.GetSidecar().TCPIdleTimeout,
+		}
+	}
+
 	marshalledTCPProxy, err := anypb.New(tcpProxy)
 	if err != nil {
 		log.Error().Err(err).Str(errcode.Kind, errcode.GetErrCodeWithMetric(errcode.ErrMarshallingXDSResource)).

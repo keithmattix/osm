@@ -10,7 +10,7 @@ import (
 	. "github.com/openservicemesh/osm/tests/framework"
 )
 
-var _ = OSMDescribe("Tests traffic via IP range exclusion",
+var _ = OSMDescribe("Test idleTimeout",
 	OSMDescribeInfo{
 		Tier:   2,
 		Bucket: 5,

@@ -12,8 +12,9 @@ import (
 
 var _ = OSMDescribe("Test idleTimeout",
 	OSMDescribeInfo{
-		Tier:   2,
+		Tier:   1,
 		Bucket: 5,
+		OS:     OSCrossPlatform,
 	},
 	func() {
 		Context("Test HTTP idle timeout", func() {
@@ -26,48 +27,46 @@ func testHTTPIdleTimeout() {
 	const destName = "server"
 	var sidecarTimeout int64 = 15
 	var ns = []string{sourceName, destName}
-	// Install OSM
-	installOpts := Td.GetOSMInstallOpts()
-	Expect(Td.InstallOSM(installOpts)).To(Succeed())
-	meshConfig, _ := Td.GetMeshConfig(Td.OsmNamespace)
-	meshConfig.Spec.Sidecar.HTTPIdleTimeout = sidecarTimeout
-
-	_, err := Td.UpdateOSMConfig(meshConfig)
-
-	Expect(err).NotTo(HaveOccurred())
-
-	// Create Test NS
-	for _, n := range ns {
-		Expect(Td.CreateNs(n, nil)).To(Succeed())
-	}
-	// Only add source namespace to the mesh, destination is simulating an external cluster
-	Expect(Td.AddNsToMesh(true, sourceName)).To(Succeed())
-
-	// Set up the destination HTTP server. It is not part of the mesh
-	svcAccDef, podDef, svcDef, err := Td.SimplePodApp(
-		SimplePodAppDef{
-			PodName:   destName,
-			Namespace: destName,
-			Image:     fortioImageName,
-			Ports:     []int{fortioHTTPPort},
-			OS:        Td.ClusterOS,
-		})
-	Expect(err).NotTo(HaveOccurred())
-
-	_, err = Td.CreateServiceAccount(destName, &svcAccDef)
-	Expect(err).NotTo(HaveOccurred())
-	_, err = Td.CreatePod(destName, podDef)
-	Expect(err).NotTo(HaveOccurred())
-	dstSvc, err := Td.CreateService(destName, svcDef)
-	Expect(err).NotTo(HaveOccurred())
-
-	// Expect it to be up and running in it's receiver namespace
-	Expect(Td.WaitForPodsRunningReady(destName, 90*time.Second, 1, nil)).To(Succeed())
-
-	srcPod := setupSource(sourceName, false)
 
 	It("Tests HTTP idle timeout by ensuring requests that take less than the timeout succeed", func() {
+		// Install OSM
+		Expect(Td.InstallOSM(Td.GetOSMInstallOpts())).To(Succeed())
+		meshConfig, _ := Td.GetMeshConfig(Td.OsmNamespace)
+		meshConfig.Spec.Sidecar.HTTPIdleTimeout = sidecarTimeout
 
+		_, err := Td.UpdateOSMConfig(meshConfig)
+
+		Expect(err).NotTo(HaveOccurred())
+
+		// Create Test NS
+		for _, n := range ns {
+			Expect(Td.CreateNs(n, nil)).To(Succeed())
+		}
+		// Only add source namespace to the mesh, destination is simulating an external cluster
+		Expect(Td.AddNsToMesh(true, sourceName)).To(Succeed())
+
+		// Set up the destination HTTP server. It is not part of the mesh
+		svcAccDef, podDef, svcDef, err := Td.SimplePodApp(
+			SimplePodAppDef{
+				PodName:   destName,
+				Namespace: destName,
+				Image:     fortioImageName,
+				Ports:     []int{fortioHTTPPort},
+				OS:        Td.ClusterOS,
+			})
+		Expect(err).NotTo(HaveOccurred())
+
+		_, err = Td.CreateServiceAccount(destName, &svcAccDef)
+		Expect(err).NotTo(HaveOccurred())
+		_, err = Td.CreatePod(destName, podDef)
+		Expect(err).NotTo(HaveOccurred())
+		dstSvc, err := Td.CreateService(destName, svcDef)
+		Expect(err).NotTo(HaveOccurred())
+
+		// Expect it to be up and running in it's receiver namespace
+		Expect(Td.WaitForPodsRunningReady(destName, 90*time.Second, 1, nil)).To(Succeed())
+
+		srcPod := setupSource(sourceName, false)
 		// All ready. Expect client to reach server
 		// TODO: Add delay via query param
 		clientToServer := HTTPRequestDef{
@@ -97,9 +96,45 @@ func testHTTPIdleTimeout() {
 	})
 
 	It("Tests HTTP idle timeout by ensuring requests that take more than the timeout fail", func() {
+		// Install OSM
+		Expect(Td.InstallOSM(Td.GetOSMInstallOpts())).To(Succeed())
+		meshConfig, _ := Td.GetMeshConfig(Td.OsmNamespace)
+		meshConfig.Spec.Sidecar.HTTPIdleTimeout = sidecarTimeout
 
+		_, err := Td.UpdateOSMConfig(meshConfig)
+
+		Expect(err).NotTo(HaveOccurred())
+
+		// Create Test NS
+		for _, n := range ns {
+			Expect(Td.CreateNs(n, nil)).To(Succeed())
+		}
+		// Only add source namespace to the mesh, destination is simulating an external cluster
+		Expect(Td.AddNsToMesh(true, sourceName)).To(Succeed())
+
+		// Set up the destination HTTP server. It is not part of the mesh
+		svcAccDef, podDef, svcDef, err := Td.SimplePodApp(
+			SimplePodAppDef{
+				PodName:   destName,
+				Namespace: destName,
+				Image:     fortioImageName,
+				Ports:     []int{fortioHTTPPort},
+				OS:        Td.ClusterOS,
+			})
+		Expect(err).NotTo(HaveOccurred())
+
+		_, err = Td.CreateServiceAccount(destName, &svcAccDef)
+		Expect(err).NotTo(HaveOccurred())
+		_, err = Td.CreatePod(destName, podDef)
+		Expect(err).NotTo(HaveOccurred())
+		dstSvc, err := Td.CreateService(destName, svcDef)
+		Expect(err).NotTo(HaveOccurred())
+
+		// Expect it to be up and running in it's receiver namespace
+		Expect(Td.WaitForPodsRunningReady(destName, 90*time.Second, 1, nil)).To(Succeed())
+
+		srcPod := setupSource(sourceName, false)
 		// All ready. Expect client to reach server
-		// TODO: Add delay via query param
 		clientToServer := HTTPRequestDef{
 			SourceNs:        sourceName,
 			SourcePod:       srcPod.Name,

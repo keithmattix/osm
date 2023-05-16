@@ -25,7 +25,7 @@ var _ = OSMDescribe("Test idleTimeout",
 func testHTTPIdleTimeout() {
 	const sourceName = "client"
 	const destName = "server"
-	var sidecarTimeout int64 = 15
+	var sidecarTimeout int64 = 60 * 6 // 6 minutes since the default idle timeout is 5 minutes
 	var ns = []string{sourceName, destName}
 
 	It("Tests HTTP idle timeout by ensuring requests that take less than the timeout succeed", func() {
@@ -33,6 +33,8 @@ func testHTTPIdleTimeout() {
 		Expect(Td.InstallOSM(Td.GetOSMInstallOpts())).To(Succeed())
 		meshConfig, _ := Td.GetMeshConfig(Td.OsmNamespace)
 		meshConfig.Spec.Sidecar.HTTPIdleTimeout = sidecarTimeout
+		meshConfig.Spec.Traffic.EnablePermissiveTrafficPolicyMode = true
+		meshConfig.Spec.Traffic.EnableEgress = true
 
 		_, err := Td.UpdateOSMConfig(meshConfig)
 
@@ -41,9 +43,9 @@ func testHTTPIdleTimeout() {
 		// Create Test NS
 		for _, n := range ns {
 			Expect(Td.CreateNs(n, nil)).To(Succeed())
+			Expect(Td.AddNsToMesh(true, n)).To(Succeed())
+
 		}
-		// Only add source namespace to the mesh, destination is simulating an external cluster
-		Expect(Td.AddNsToMesh(true, sourceName)).To(Succeed())
 
 		// Set up the destination HTTP server. It is not part of the mesh
 		svcAccDef, podDef, svcDef, err := Td.SimplePodApp(
@@ -51,6 +53,7 @@ func testHTTPIdleTimeout() {
 				PodName:   destName,
 				Namespace: destName,
 				Image:     fortioImageName,
+				Command:   []string{"/usr/bin/fortio", "server", "-config-dir", "/etc/fortio", "--max-echo-delay", "24h"},
 				Ports:     []int{fortioHTTPPort},
 				OS:        Td.ClusterOS,
 			})
@@ -66,33 +69,27 @@ func testHTTPIdleTimeout() {
 		// Expect it to be up and running in it's receiver namespace
 		Expect(Td.WaitForPodsRunningReady(destName, 90*time.Second, 1, nil)).To(Succeed())
 
-		srcPod := setupSource(sourceName, false)
+		srcPod := setupSource(sourceName, true)
+		fortioTimeout := sidecarTimeout - 1
 		// All ready. Expect client to reach server
-		// TODO: Add delay via query param
 		clientToServer := HTTPRequestDef{
 			SourceNs:        sourceName,
 			SourcePod:       srcPod.Name,
 			SourceContainer: srcPod.Name,
-			Destination:     fmt.Sprintf("%s.%s:%d?delay=%ds", dstSvc.Name, dstSvc.Namespace, fortioHTTPPort, sidecarTimeout-1), // Make sure requests less than the timeout succeed
+			Destination:     fmt.Sprintf("%s.%s:%d?delay=%ds", dstSvc.Name, dstSvc.Namespace, fortioHTTPPort, fortioTimeout), // Make sure requests less than the timeout succeed
 		}
 
 		srcToDestStr := fmt.Sprintf("%s -> %s",
 			fmt.Sprintf("%s/%s", sourceName, srcPod.Name),
 			clientToServer.Destination)
 
-		cond := Td.WaitForRepeatedSuccess(func() bool {
-			result := Td.HTTPRequest(clientToServer)
+		result := Td.HTTPRequest(clientToServer)
 
-			if result.Err != nil || result.StatusCode != 200 {
-				Td.T.Logf("> (%s) HTTP Req failed %d %v",
-					srcToDestStr, result.StatusCode, result.Err)
-				return false
-			}
-			Td.T.Logf("> (%s) HTTP Req succeeded: %d", srcToDestStr, result.StatusCode)
-			return true
-		}, 3, 120*time.Second)
+		if result.Err != nil {
+			Td.T.Logf("> (%s) HTTP Req failed with err %v", srcToDestStr, result.Err)
+		}
 
-		Expect(cond).To(BeTrue(), "Failed testing HTTP idleTimeout of %ds with a fortio delay of %ds", sidecarTimeout, sidecarTimeout-1)
+		Expect(result.StatusCode).To(Equal(200), "Failed testing HTTP idleTimeout of %ds with a fortio delay of %ds. Expected 200 received %d or err %v", sidecarTimeout, fortioTimeout, result.StatusCode, result.Err)
 	})
 
 	It("Tests HTTP idle timeout by ensuring requests that take more than the timeout fail", func() {
@@ -100,6 +97,8 @@ func testHTTPIdleTimeout() {
 		Expect(Td.InstallOSM(Td.GetOSMInstallOpts())).To(Succeed())
 		meshConfig, _ := Td.GetMeshConfig(Td.OsmNamespace)
 		meshConfig.Spec.Sidecar.HTTPIdleTimeout = sidecarTimeout
+		meshConfig.Spec.Traffic.EnablePermissiveTrafficPolicyMode = true
+		meshConfig.Spec.Traffic.EnableEgress = true
 
 		_, err := Td.UpdateOSMConfig(meshConfig)
 
@@ -108,9 +107,8 @@ func testHTTPIdleTimeout() {
 		// Create Test NS
 		for _, n := range ns {
 			Expect(Td.CreateNs(n, nil)).To(Succeed())
+			Expect(Td.AddNsToMesh(true, n)).To(Succeed())
 		}
-		// Only add source namespace to the mesh, destination is simulating an external cluster
-		Expect(Td.AddNsToMesh(true, sourceName)).To(Succeed())
 
 		// Set up the destination HTTP server. It is not part of the mesh
 		svcAccDef, podDef, svcDef, err := Td.SimplePodApp(
@@ -118,6 +116,7 @@ func testHTTPIdleTimeout() {
 				PodName:   destName,
 				Namespace: destName,
 				Image:     fortioImageName,
+				Command:   []string{"/usr/bin/fortio", "server", "-config-dir", "/etc/fortio", "--max-echo-delay", "24h"},
 				Ports:     []int{fortioHTTPPort},
 				OS:        Td.ClusterOS,
 			})
@@ -135,35 +134,25 @@ func testHTTPIdleTimeout() {
 
 		srcPod := setupSource(sourceName, false)
 		// All ready. Expect client to reach server
+		fortioDelay := sidecarTimeout + 5
 		clientToServer := HTTPRequestDef{
 			SourceNs:        sourceName,
 			SourcePod:       srcPod.Name,
 			SourceContainer: srcPod.Name,
-			Destination:     fmt.Sprintf("%s.%s:%d?delay=%ds", dstSvc.Name, dstSvc.Namespace, fortioHTTPPort, sidecarTimeout+1), // Make sure requests greater than the timeout fail
+			Destination:     fmt.Sprintf("%s.%s:%d?delay=%ds", dstSvc.Name, dstSvc.Namespace, fortioHTTPPort, fortioDelay), // Make sure requests greater than the timeout fail
 		}
 
 		srcToDestStr := fmt.Sprintf("%s -> %s",
 			fmt.Sprintf("%s/%s", sourceName, srcPod.Name),
 			clientToServer.Destination)
 
-		cond := Td.WaitForRepeatedSuccess(func() bool {
-			result := Td.HTTPRequest(clientToServer)
+		result := Td.HTTPRequest(clientToServer)
 
-			if result.Err != nil {
-				Td.T.Logf("> (%s) HTTP Req had an error %d %v",
-					srcToDestStr, result.StatusCode, result.Err)
-				return false
-			}
+		if result.Err != nil {
+			Td.T.Logf("> (%s) HTTP Req had an error %d %v",
+				srcToDestStr, result.StatusCode, result.Err)
+		}
 
-			if result.StatusCode != 503 {
-				Td.T.Logf("> (%s) HTTP Req did not return 503 as expected (due to exeecding the timeout). Instead received %d %v",
-					srcToDestStr, result.StatusCode, result.Err)
-				return false
-			}
-			Td.T.Logf("> (%s) HTTP Req failed due to timeout as expected: %d", srcToDestStr, result.StatusCode)
-			return true
-		}, 3, 120*time.Second)
-
-		Expect(cond).To(BeTrue(), "Failed testing HTTP idleTimeout of %ds with a fortio delay of %ds", sidecarTimeout, sidecarTimeout-1)
+		Expect(result.StatusCode).To(Equal(504), "Failed testing HTTP idleTimeout of %ds with a fortio delay of %ds. Expected 504 received %d or err %v", sidecarTimeout, fortioDelay, result.StatusCode, result.Err)
 	})
 }

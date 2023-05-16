@@ -53,9 +53,6 @@ type httpConnManagerOptions struct {
 
 func (options httpConnManagerOptions) build() (*xds_hcm.HttpConnectionManager, error) {
 	connManager := &xds_hcm.HttpConnectionManager{
-		StreamIdleTimeout: &duration.Duration{ // explicitly disable stream idle timeout
-			Seconds: 0,
-		},
 		StatPrefix: fmt.Sprintf("%s.%s", meshHTTPConnManagerStatPrefix, options.rdsRoutConfigName),
 		CodecType:  xds_hcm.HttpConnectionManager_AUTO,
 		HttpFilters: []*xds_hcm.HttpFilter{
@@ -100,7 +97,7 @@ func (options httpConnManagerOptions) build() (*xds_hcm.HttpConnectionManager, e
 	}
 
 	if options.idleTimeout != 0 {
-		connManager.CommonHttpProtocolOptions.IdleTimeout = &duration.Duration{
+		connManager.StreamIdleTimeout = &duration.Duration{
 			Seconds: options.idleTimeout,
 		}
 	}

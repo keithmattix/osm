@@ -103,8 +103,6 @@ func (lb *listenerBuilder) getInboundHTTPFilters(trafficMatch *trafficpolicy.Tra
 		// Tracing options
 		enableTracing:      lb.cfg.IsTracingEnabled(),
 		tracingAPIEndpoint: lb.cfg.GetTracingEndpoint(),
-
-		// Connection options
 	}
 
 	if lb.cfg.GetSidecar().HTTPIdleTimeout != 0 {
@@ -330,8 +328,7 @@ func (lb *listenerBuilder) getOutboundHTTPFilter(routeConfigName string) (*xds_l
 	var marshalledFilter *any.Any
 	var err error
 
-	// Build the HTTP connection manager filter from its options
-	outboundConnManager, err := httpConnManagerOptions{
+	opts := httpConnManagerOptions{
 		direction:         outbound,
 		rdsRoutConfigName: routeConfigName,
 
@@ -342,7 +339,15 @@ func (lb *listenerBuilder) getOutboundHTTPFilter(routeConfigName string) (*xds_l
 		// Tracing options
 		enableTracing:      lb.cfg.IsTracingEnabled(),
 		tracingAPIEndpoint: lb.cfg.GetTracingEndpoint(),
-	}.build()
+	}
+
+	if lb.cfg.GetSidecar().HTTPIdleTimeout != 0 {
+		opts.idleTimeout = lb.cfg.GetSidecar().HTTPIdleTimeout
+	}
+
+	// Build the HTTP connection manager filter from its options
+	outboundConnManager, err := opts.build()
+
 	if err != nil {
 		return nil, fmt.Errorf("Error building outbound HTTP connection manager for proxy identity %s", lb.serviceIdentity)
 	}
@@ -452,6 +457,12 @@ func (lb *listenerBuilder) getOutboundTCPFilter(trafficMatch trafficpolicy.Traff
 			WeightedClusters: &xds_tcp_proxy.TcpProxy_WeightedCluster{
 				Clusters: clusterWeights,
 			},
+		}
+	}
+
+	if lb.cfg.GetSidecar().TCPIdleTimeout != 0 {
+		tcpProxy.IdleTimeout = &duration.Duration{
+			Seconds: lb.cfg.GetSidecar().TCPIdleTimeout,
 		}
 	}
 

@@ -10,6 +10,8 @@ const (
 
 	fortioTCPRetCodeSuccess  = "OK"
 	fortioGRPCRetCodeSuccess = "SERVING"
+
+	tcpEchoServerPort = 9090
 )
 
 var (

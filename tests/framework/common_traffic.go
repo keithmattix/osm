@@ -37,6 +37,7 @@ type TCPRequestDef struct {
 	SourceNs        string
 	SourcePod       string
 	SourceContainer string
+	Timeout         int
 
 	// The destination server host (FQDN or IP address) and port the request is directed to
 	DestinationHost string
@@ -72,6 +73,7 @@ type HTTPRequestResult struct {
 	StatusCode int
 	Headers    map[string]string
 	Err        error
+	Body       string
 }
 
 // TCPRequestResult represents the result of a TCPRequest call
@@ -106,6 +108,7 @@ func (td *OsmTestData) HTTPRequest(ht HTTPRequestDef) HTTPRequestResult {
 			0,
 			nil,
 			fmt.Errorf("Remote exec err: %w | stderr: %s", err, stderr),
+			"",
 		}
 	}
 	if len(stderr) > 0 {
@@ -121,6 +124,7 @@ func (td *OsmTestData) HTTPRequest(ht HTTPRequestDef) HTTPRequestResult {
 			0,
 			nil,
 			fmt.Errorf("Could not read status code as integer: %w", err),
+			stdout,
 		}
 	}
 	delete(curlMappedReturn, StatusCodeWord)
@@ -129,6 +133,7 @@ func (td *OsmTestData) HTTPRequest(ht HTTPRequestDef) HTTPRequestResult {
 		statusCode,
 		curlMappedReturn,
 		nil,
+		stdout,
 	}
 }
 
@@ -143,7 +148,7 @@ func (td *OsmTestData) TCPRequest(req TCPRequestDef) TCPRequestResult {
 			"$reader = New-Object System.IO.StreamReader($Stream); Write-Host -NoNewline $reader.ReadLine()"
 		command = []string{"pwsh.exe", "-c", powershellCommand}
 	} else {
-		commandArgs := fmt.Sprintf("echo \"%s\" | nc %s %d", req.Message, req.DestinationHost, req.DestinationPort)
+		commandArgs := fmt.Sprintf("echo \"%s\" | nc -w %d %s %d", req.Message, req.Timeout, req.DestinationHost, req.DestinationPort)
 		command = []string{"sh", "-c", commandArgs}
 	}
 

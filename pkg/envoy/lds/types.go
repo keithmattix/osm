@@ -15,9 +15,10 @@ var (
 
 // listenerBuilder is a type containing data to build the listener configurations
 type listenerBuilder struct {
-	serviceIdentity identity.ServiceIdentity
-	meshCatalog     catalog.MeshCataloger
-	cfg             configurator.Configurator
-	statsHeaders    map[string]string
-	trustDomain     string
+	serviceIdentity               identity.ServiceIdentity
+	meshCatalog                   catalog.MeshCataloger
+	cfg                           configurator.Configurator
+	statsHeaders                  map[string]string
+	trustDomain                   string
+	disableListenerFiltersTimeout bool
 }

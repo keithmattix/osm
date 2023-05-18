@@ -606,7 +606,7 @@ func (td *OsmTestData) GetOSSpecificSleepPod(sourceNs string) (corev1.ServiceAcc
 }
 
 // GetOSSpecificTCPEchoPod returns a simple OS specific tcp-echo pod.
-func (td *OsmTestData) GetOSSpecificTCPEchoPod(podName string, namespace string, destinationPort int) (corev1.ServiceAccount, corev1.Pod, corev1.Service, error) {
+func (td *OsmTestData) GetOSSpecificTCPEchoPod(podName string, namespace string, destinationPort int, delay int) (corev1.ServiceAccount, corev1.Pod, corev1.Service, error) {
 	var image string
 	var command string
 	installOpts := Td.GetOSMInstallOpts()
@@ -623,7 +623,7 @@ func (td *OsmTestData) GetOSSpecificTCPEchoPod(podName string, namespace string,
 			Namespace:   namespace,
 			Image:       image,
 			Command:     []string{command},
-			Args:        []string{"--port", fmt.Sprintf("%d", destinationPort)},
+			Args:        []string{"--port", fmt.Sprintf("%d", destinationPort), "--delay", fmt.Sprintf("%d", delay)},
 			Ports:       []int{destinationPort},
 			AppProtocol: constants.ProtocolTCP,
 			OS:          Td.ClusterOS,

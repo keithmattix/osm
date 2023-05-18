@@ -89,7 +89,7 @@ func testHTTPIdleTimeout() {
 			Td.T.Logf("> (%s) HTTP Req failed with err %v", srcToDestStr, result.Err)
 		}
 
-		Expect(result.StatusCode).To(Equal(200), "Failed testing HTTP idleTimeout of %ds with a fortio delay of %ds. Expected 200 received %d or err %v", sidecarTimeout, fortioTimeout, result.StatusCode, result.Err)
+		Expect(result.StatusCode).To(Equal(200), "Failed testing HTTP idleTimeout of %ds with a fortio delay of %ds. Expected 200 received %d or err %v. Body was: %s", sidecarTimeout, fortioTimeout, result.StatusCode, result.Err, result.Body)
 	})
 
 	It("Tests HTTP idle timeout by ensuring requests that take more than the timeout fail", func() {
@@ -153,6 +153,6 @@ func testHTTPIdleTimeout() {
 				srcToDestStr, result.StatusCode, result.Err)
 		}
 
-		Expect(result.StatusCode).To(Equal(504), "Failed testing HTTP idleTimeout of %ds with a fortio delay of %ds. Expected 504 received %d or err %v", sidecarTimeout, fortioDelay, result.StatusCode, result.Err)
+		Expect(result.StatusCode).To(Equal(504), "Failed testing HTTP idleTimeout of %ds with a fortio delay of %ds. Expected 504 received %d or err %v. Body was %s", sidecarTimeout, fortioDelay, result.StatusCode, result.Err, result.Body)
 	})
 }

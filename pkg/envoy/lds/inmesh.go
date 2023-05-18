@@ -267,6 +267,12 @@ func (lb *listenerBuilder) getInboundTCPFilters(trafficMatch *trafficpolicy.Traf
 		tcpProxy.IdleTimeout = &duration.Duration{
 			Seconds: lb.cfg.GetSidecar().TCPIdleTimeout,
 		}
+
+		// The default listener timeout (for tls_inspector) is 15s. If the TCP idle timeout is greater than 15s, we need to
+		// disable the listener timeout for the TCP proxy filter to avoid closing connections before the TCP idle timeout.
+		if lb.cfg.GetSidecar().TCPIdleTimeout > 15 {
+			lb.disableListenerFiltersTimeout = true
+		}
 	}
 
 	marshalledTCPProxy, err := anypb.New(tcpProxy)

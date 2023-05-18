@@ -8,6 +8,7 @@ import (
 	"io"
 	"net"
 	"strings"
+	"time"
 
 	"github.com/openservicemesh/osm/pkg/logger"
 )
@@ -17,6 +18,7 @@ var (
 	logLevel       = flag.String("logLevel", "debug", "Log output level")
 	port           = flag.Int("port", 9090, "port on which this app is serving TCP connections")
 	responsePrefix = "echo response:"
+	delay          = flag.Int("delay", 0, "delay in seconds before responding to a new connection")
 )
 
 func main() {
@@ -62,6 +64,9 @@ func echoResponse(conn net.Conn) {
 			// respond to the request, prepend the prefix to the response
 			log.Info().Msgf("Received request: [%s]", requestMsg)
 			response := fmt.Sprintf("%s %s\n", responsePrefix, requestMsg)
+			if *delay > 0 {
+				time.Sleep(time.Duration(*delay) * time.Second)
+			}
 			if bytesWritten, writeErr := conn.Write([]byte(response)); err != nil {
 				log.Error().Err(writeErr).Msg("Write error")
 			} else {

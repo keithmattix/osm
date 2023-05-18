@@ -2,6 +2,7 @@ package lds
 
 import (
 	"fmt"
+	"time"
 
 	mapset "github.com/deckarep/golang-set"
 	xds_core "github.com/envoyproxy/go-control-plane/envoy/config/core/v3"
@@ -11,6 +12,7 @@ import (
 	xds_type "github.com/envoyproxy/go-control-plane/envoy/type/v3"
 	"github.com/golang/protobuf/ptypes/any"
 	"google.golang.org/protobuf/types/known/anypb"
+	"google.golang.org/protobuf/types/known/durationpb"
 
 	"github.com/openservicemesh/osm/pkg/constants"
 	"github.com/openservicemesh/osm/pkg/envoy"
@@ -119,6 +121,12 @@ func (lb *listenerBuilder) newOutboundListener() (*xds_listener.Listener, error)
 		// there are no allowed upstreams for this proxy and egress is disabled.
 		// In this case, return a nil filter chain so that it doesn't get programmed.
 		return nil, nil
+	}
+
+	// If at any point while processing the filter chains, the listener filter timeout
+	// field on the builder is disabled, then disable the listener filter timeout.
+	if lb.disableListenerFiltersTimeout {
+		listener.ListenerFiltersTimeout = durationpb.New(0 * time.Second)
 	}
 
 	return listener, nil

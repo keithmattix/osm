@@ -237,6 +237,7 @@ func TestGetEgressFilterChainsForMatches(t *testing.T) {
 				EnableEgressPolicy: true,
 				EnableWASMStats:    false,
 			}).AnyTimes()
+			mockConfigurator.EXPECT().GetSidecar().Return(configv1alpha2.SidecarSpec{}).AnyTimes()
 
 			actual := lb.getEgressFilterChainsForMatches(tc.trafficMatches)
 

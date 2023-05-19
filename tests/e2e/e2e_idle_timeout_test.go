@@ -44,7 +44,6 @@ func testHTTPIdleTimeout() {
 		for _, n := range ns {
 			Expect(Td.CreateNs(n, nil)).To(Succeed())
 			Expect(Td.AddNsToMesh(true, n)).To(Succeed())
-
 		}
 
 		// Set up the destination HTTP server. It is not part of the mesh

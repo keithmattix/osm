@@ -99,4 +99,7 @@ type Configurator interface {
 
 	// GetFeatureFlags returns OSM's feature flags
 	GetFeatureFlags() configv1alpha2.FeatureFlags
+
+	// GetSidecar returns the sidecar component of the MeshConfig
+	GetSidecar() configv1alpha2.SidecarSpec
 }

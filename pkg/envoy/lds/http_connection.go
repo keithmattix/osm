@@ -7,6 +7,7 @@ import (
 	xds_local_ratelimit "github.com/envoyproxy/go-control-plane/envoy/extensions/filters/http/local_ratelimit/v3"
 	xds_hcm "github.com/envoyproxy/go-control-plane/envoy/extensions/filters/network/http_connection_manager/v3"
 	"github.com/golang/protobuf/ptypes/any"
+	"github.com/golang/protobuf/ptypes/duration"
 	"github.com/golang/protobuf/ptypes/wrappers"
 
 	"github.com/openservicemesh/osm/pkg/auth"
@@ -45,6 +46,9 @@ type httpConnManagerOptions struct {
 	// Tracing options
 	enableTracing      bool
 	tracingAPIEndpoint string
+
+	// connection settings
+	idleTimeout int64
 }
 
 func (options httpConnManagerOptions) build() (*xds_hcm.HttpConnectionManager, error) {
@@ -90,6 +94,12 @@ func (options httpConnManagerOptions) build() (*xds_hcm.HttpConnectionManager, e
 				UpgradeType: websocketUpgradeType,
 			},
 		},
+	}
+
+	if options.idleTimeout != 0 {
+		connManager.StreamIdleTimeout = &duration.Duration{
+			Seconds: options.idleTimeout,
+		}
 	}
 
 	// For inbound connections, add the Authz filter

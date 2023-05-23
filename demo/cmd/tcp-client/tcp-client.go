@@ -24,7 +24,7 @@ var (
 	requestPrefix         = "request:"
 	connectRetryDelay     = 3 * time.Second
 	nextMsgDelay          = 3 * time.Second
-	msgCountPerConnection = 3
+	msgCountPerConnection = flag.Int("msgCountPerConnection", 3, "number of messages to send before closing the connection")
 )
 
 func main() {
@@ -49,7 +49,7 @@ func main() {
 
 		// Send as many messages determined by 'msgCountPerConnection' before creating a new connection
 		response := bufio.NewReader(conn)
-		for msgCounter := 1; msgCounter <= msgCountPerConnection; msgCounter++ {
+		for msgCounter := 1; msgCounter <= *msgCountPerConnection; msgCounter++ {
 			time.Sleep(nextMsgDelay)
 			requestMsg := fmt.Sprintf("%s #connection=%d, #msg-counter=%d, msg=client hello\n", requestPrefix, connectionCounter, msgCounter)
 

@@ -76,6 +76,7 @@ func TestNewResponse(t *testing.T) {
 
 	mockConfigurator.EXPECT().IsPermissiveTrafficPolicyMode().Return(false).AnyTimes()
 	mockConfigurator.EXPECT().IsTracingEnabled().Return(false).AnyTimes()
+	mockConfigurator.EXPECT().GetSidecar().Return(configv1alpha2.SidecarSpec{}).AnyTimes()
 	mockConfigurator.EXPECT().GetTracingEndpoint().Return("some-endpoint").AnyTimes()
 	mockConfigurator.EXPECT().IsEgressEnabled().Return(true).AnyTimes()
 	mockConfigurator.EXPECT().GetInboundExternalAuthConfig().Return(auth.ExtAuthConfig{

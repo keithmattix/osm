@@ -194,6 +194,7 @@ func TestNewOutboundListener(t *testing.T) {
 	cfg.EXPECT().GetFeatureFlags().Return(configv1alpha2.FeatureFlags{
 		EnableEgressPolicy: true,
 	}).Times(1)
+	cfg.EXPECT().GetSidecar().Return(configv1alpha2.SidecarSpec{}).AnyTimes()
 
 	lb := newListenerBuilder(meshCatalog, identity, cfg, nil, "cluster.local")
 

@@ -90,6 +90,12 @@ type SidecarSpec struct {
 
 	// LocalProxyMode defines the network interface the envoy proxy will use to send traffic to the backend service application. Acceptable values are [`Localhost`, `PodIP`]. The default is `Localhost`
 	LocalProxyMode LocalProxyMode `json:"localProxyMode,omitempty"`
+
+	// HTTPIdleTimeout defines the idle timeout for inbound HTTP connections (in seconds). A value of zero (0) defers to the Envoy defaults for idle timeout
+	HTTPIdleTimeout int64 `json:"httpIdleTimeout,omitempty"`
+
+	// TCPIdleTimeout defines the idle timeout for inbound TCP connections (in seconds). A value of zero (0) defers to the Envoy defaults for idle timeout
+	TCPIdleTimeout int64 `json:"tcpIdleTimeout,omitempty"`
 }
 
 // TrafficSpec is the type used to represent OSM's traffic management configuration.

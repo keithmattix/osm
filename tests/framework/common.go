@@ -1095,7 +1095,11 @@ func (td *OsmTestData) RunRemote(
 	if err != nil {
 		return "", "", err
 	}
-	err = exec.Stream(remotecommand.StreamOptions{
+
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Minute) // no single exec should last 30 minutes
+	defer cancel()
+
+	err = exec.StreamWithContext(ctx, remotecommand.StreamOptions{
 		Stdin:  &stdin,
 		Stdout: &stdout,
 		Stderr: &stderr,

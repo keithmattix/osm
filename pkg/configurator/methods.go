@@ -244,3 +244,8 @@ func (c *Client) GetFeatureFlags() configv1alpha2.FeatureFlags {
 func (c *Client) GetOSMLogLevel() string {
 	return c.getMeshConfig().Spec.Observability.OSMLogLevel
 }
+
+// GetSidecar returns the sidecar component of the mesh config
+func (c *Client) GetSidecar() configv1alpha2.SidecarSpec {
+	return c.getMeshConfig().Spec.Sidecar
+}

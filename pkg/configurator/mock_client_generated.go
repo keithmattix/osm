@@ -262,6 +262,20 @@ func (mr *MockConfiguratorMockRecorder) GetServiceCertValidityPeriod() *gomock.C
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetServiceCertValidityPeriod", reflect.TypeOf((*MockConfigurator)(nil).GetServiceCertValidityPeriod))
 }
 
+// GetSidecar mocks base method.
+func (m *MockConfigurator) GetSidecar() v1alpha2.SidecarSpec {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetSidecar")
+	ret0, _ := ret[0].(v1alpha2.SidecarSpec)
+	return ret0
+}
+
+// GetSidecar indicates an expected call of GetSidecar.
+func (mr *MockConfiguratorMockRecorder) GetSidecar() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSidecar", reflect.TypeOf((*MockConfigurator)(nil).GetSidecar))
+}
+
 // GetTracingEndpoint mocks base method.
 func (m *MockConfigurator) GetTracingEndpoint() string {
 	m.ctrl.T.Helper()

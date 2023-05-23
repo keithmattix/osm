@@ -35,6 +35,7 @@ func TestGetOutboundHTTPFilterChainForService(t *testing.T) {
 	// Mock calls used to build the HTTP connection manager
 	mockConfigurator.EXPECT().IsTracingEnabled().Return(false).AnyTimes()
 	mockConfigurator.EXPECT().GetTracingEndpoint().Return("test-api").AnyTimes()
+	mockConfigurator.EXPECT().GetSidecar().Return(configv1alpha2.SidecarSpec{}).AnyTimes()
 	mockConfigurator.EXPECT().GetInboundExternalAuthConfig().Return(auth.ExtAuthConfig{
 		Enable: false,
 	}).AnyTimes()
@@ -125,6 +126,9 @@ func TestGetOutboundTCPFilterChainForService(t *testing.T) {
 	mockCatalog := catalog.NewMockMeshCataloger(mockCtrl)
 	mockConfigurator := configurator.NewMockConfigurator(mockCtrl)
 
+	// Mock calls used to build the HTTP connection manager
+	mockConfigurator.EXPECT().GetSidecar().Return(configv1alpha2.SidecarSpec{}).AnyTimes()
+
 	lb := &listenerBuilder{
 		meshCatalog:     mockCatalog,
 		cfg:             mockConfigurator,
@@ -212,6 +216,7 @@ func TestGetInboundMeshHTTPFilterChain(t *testing.T) {
 	// Mock calls used to build the HTTP connection manager
 	mockConfigurator.EXPECT().IsTracingEnabled().Return(false).AnyTimes()
 	mockConfigurator.EXPECT().GetTracingEndpoint().Return("test-api").AnyTimes()
+	mockConfigurator.EXPECT().GetSidecar().Return(configv1alpha2.SidecarSpec{}).AnyTimes()
 	mockConfigurator.EXPECT().GetInboundExternalAuthConfig().Return(auth.ExtAuthConfig{
 		Enable: false,
 	}).AnyTimes()
@@ -343,6 +348,7 @@ func TestGetInboundMeshTCPFilterChain(t *testing.T) {
 	// Mock calls used to build the HTTP connection manager
 	mockConfigurator.EXPECT().IsTracingEnabled().Return(false).AnyTimes()
 	mockConfigurator.EXPECT().GetTracingEndpoint().Return("test-api").AnyTimes()
+	mockConfigurator.EXPECT().GetSidecar().Return(configv1alpha2.SidecarSpec{}).AnyTimes()
 	mockConfigurator.EXPECT().GetInboundExternalAuthConfig().Return(auth.ExtAuthConfig{
 		Enable: false,
 	}).AnyTimes()
@@ -467,6 +473,7 @@ func TestGetOutboundFilterChainMatchForService(t *testing.T) {
 
 	mockConfigurator := configurator.NewMockConfigurator(mockCtrl)
 	mockCatalog := catalog.NewMockMeshCataloger(mockCtrl)
+	mockConfigurator.EXPECT().GetSidecar().Return(configv1alpha2.SidecarSpec{}).AnyTimes()
 
 	lb := newListenerBuilder(mockCatalog, tests.BookbuyerServiceIdentity, mockConfigurator, nil, "cluster.local")
 
@@ -643,6 +650,8 @@ func TestGetOutboundTCPFilter(t *testing.T) {
 			mockCatalog := catalog.NewMockMeshCataloger(mockCtrl)
 			mockConfigurator := configurator.NewMockConfigurator(mockCtrl)
 
+			mockConfigurator.EXPECT().GetSidecar().Return(configv1alpha2.SidecarSpec{}).AnyTimes()
+
 			lb := newListenerBuilder(mockCatalog, tests.BookbuyerServiceIdentity, mockConfigurator, nil, "cluster.local")
 			filter, err := lb.getOutboundTCPFilter(tc.trafficMatch)
 
@@ -673,6 +682,7 @@ func TestGetOutboundHTTPFilter(t *testing.T) {
 
 	mockConfigurator.EXPECT().IsTracingEnabled()
 	mockConfigurator.EXPECT().GetTracingEndpoint()
+	mockConfigurator.EXPECT().GetSidecar().Return(configv1alpha2.SidecarSpec{}).AnyTimes()
 	mockConfigurator.EXPECT().GetInboundExternalAuthConfig().Return(auth.ExtAuthConfig{
 		Enable: false,
 	}).AnyTimes()

@@ -13,7 +13,7 @@ import (
 var _ = OSMDescribe("Test idleTimeout",
 	OSMDescribeInfo{
 		Tier:   1,
-		Bucket: 5,
+		Bucket: 12,
 		OS:     OSCrossPlatform,
 	},
 	func() {

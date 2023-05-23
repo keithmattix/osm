@@ -105,7 +105,7 @@ func (lb *listenerBuilder) getInboundHTTPFilters(trafficMatch *trafficpolicy.Tra
 		tracingAPIEndpoint: lb.cfg.GetTracingEndpoint(),
 	}
 
-	if lb.cfg.GetSidecar().HTTPIdleTimeout != 0 {
+	if lb.cfg.GetSidecar().HTTPIdleTimeout > 0 {
 		opts.idleTimeout = lb.cfg.GetSidecar().HTTPIdleTimeout
 	}
 	inboundConnManager, err := opts.build()
@@ -347,7 +347,7 @@ func (lb *listenerBuilder) getOutboundHTTPFilter(routeConfigName string) (*xds_l
 		tracingAPIEndpoint: lb.cfg.GetTracingEndpoint(),
 	}
 
-	if lb.cfg.GetSidecar().HTTPIdleTimeout != 0 {
+	if lb.cfg.GetSidecar().HTTPIdleTimeout > 0 {
 		opts.idleTimeout = lb.cfg.GetSidecar().HTTPIdleTimeout
 	}
 

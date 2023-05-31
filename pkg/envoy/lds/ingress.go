@@ -50,7 +50,7 @@ func (lb *listenerBuilder) getIngressFilterChainFromTrafficMatch(trafficMatch *t
 	}
 
 	// Build the HTTP Connection Manager filter from its options
-	ingressConnManager, err := httpConnManagerOptions{
+	opts := httpConnManagerOptions{
 		direction:         inbound,
 		rdsRoutConfigName: route.IngressRouteConfigName,
 
@@ -61,7 +61,14 @@ func (lb *listenerBuilder) getIngressFilterChainFromTrafficMatch(trafficMatch *t
 		// Tracing options
 		enableTracing:      lb.cfg.IsTracingEnabled(),
 		tracingAPIEndpoint: lb.cfg.GetTracingEndpoint(),
-	}.build()
+	}
+
+	if lb.cfg.GetSidecar().HTTPIdleTimeout > 0 {
+		opts.idleTimeout = lb.cfg.GetSidecar().HTTPIdleTimeout
+	}
+
+	ingressConnManager, err := opts.build()
+
 	if err != nil {
 		return nil, fmt.Errorf("Error building inbound HTTP connection manager for proxy with identity %s, traffic match: %v ", lb.serviceIdentity, trafficMatch)
 	}
